@@ -19,6 +19,7 @@ S3method(summary,  msfit)
 importFrom("grDevices", "n2mfrow")
 importFrom("graphics", "curve", "lines", "par", "plot", "rect",
            "segments", "text")
-importFrom("stats", "as.dist", "cor", "dist", "dnorm", "hclust",
+importFrom("stats", "as.dist", "cor", "dist", "dnorm",
            "lsfit", "na.omit", "pchisq", "pnorm", "qnorm", "rmultinom")
+importFrom("fastcluster", "hclust")           
 importFrom("utils", "capture.output", "head", "packageVersion")
