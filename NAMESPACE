@@ -4,7 +4,7 @@ export(msfit)
 export(msplot)
 export(pvrect)
 export(seplot)
-export(parPvclust)
+export(parfastpvclust)
 
 S3method(plot,     fastpvclust)
 S3method(lines,    fastpvclust)
