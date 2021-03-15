@@ -1,4 +1,4 @@
-Package: pvclust
+Package: fastpvclust
 Version: 2.2-0
 Date: 2019-11-19
 Title: Hierarchical Clustering with P-Values via Multiscale Bootstrap
