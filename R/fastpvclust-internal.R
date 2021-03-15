@@ -1,6 +1,6 @@
-### internal function for non-parallel pvclust
+### internal function for non-parallel fastpvclust
 
-pvclust.common.settings <- function(data, method.dist, use.cor, method.hclust, r) {
+fastpvclust.common.settings <- function(data, method.dist, use.cor, method.hclust, r) {
   # data: (n,p) matrix, n-samples, p-variables
   n <- nrow(data); p <- ncol(data)
   
@@ -9,7 +9,7 @@ pvclust.common.settings <- function(data, method.dist, use.cor, method.hclust, r
     # Use custom distance function
     distance <- method.dist(data)
   } else {
-    distance <- dist.pvclust(data, method=method.dist, use.cor=use.cor)
+    distance <- dist.fastpvclust(data, method=method.dist, use.cor=use.cor)
   }
   
   data.hclust <- fastcluster::hclust(distance, method=method.hclust)
@@ -36,7 +36,7 @@ pvclust.common.settings <- function(data, method.dist, use.cor, method.hclust, r
   return(list(data.hclust=data.hclust, method.hclust=method.hclust, rl=rl, r=r))
 }
 
-pvclust.nonparallel <- function(data, method.hclust, method.dist, use.cor, nboot, r,
+fastpvclust.nonparallel <- function(data, method.hclust, method.dist, use.cor, nboot, r,
                                 store, weight, iseed, quiet)
 {
   # initialize random seed
@@ -44,20 +44,20 @@ pvclust.nonparallel <- function(data, method.hclust, method.dist, use.cor, nboot
     set.seed(seed = iseed)
   
   # set setting parameters
-  pars <- pvclust.common.settings(data=data, method.dist=method.dist, use.cor=use.cor, method.hclust=method.hclust, r=r)
+  pars <- fastpvclust.common.settings(data=data, method.dist=method.dist, use.cor=use.cor, method.hclust=method.hclust, r=r)
   
   mboot <- lapply(pars$r, boot.hclust, data=data, object.hclust=pars$data.hclust, nboot=nboot,
                   method.dist=method.dist, use.cor=use.cor,
                   method.hclust=pars$method.hclust, store=store, weight=weight, quiet=quiet)
   
-  result <- pvclust.merge(data=data, object.hclust=pars$data.hclust, mboot=mboot)
+  result <- fastpvclust.merge(data=data, object.hclust=pars$data.hclust, mboot=mboot)
   
   return(result)
 }
 
 
-### internal function for parallel pvclust
-pvclust.parallel <- function(cl, data, method.hclust, method.dist, use.cor,
+### internal function for parallel fastpvclust
+fastpvclust.parallel <- function(cl, data, method.hclust, method.dist, use.cor,
                              nboot, r, store, weight, init.rand=NULL, iseed, quiet,
                              parallel.check)
 {
@@ -66,13 +66,13 @@ pvclust.parallel <- function(cl, data, method.hclust, method.dist, use.cor,
     if(!check.result) {
       msg <- paste(attr(check.result, "msg"), ". non-parallel version is executed", sep = "")
       warning(msg)
-      return(pvclust.nonparallel(data=data, method.hclust=method.hclust, method.dist=method.dist,
+      return(fastpvclust.nonparallel(data=data, method.hclust=method.hclust, method.dist=method.dist,
                                  use.cor=use.cor, nboot=nboot, r=r, store=store, weight=weight, iseed=iseed, quiet=quiet))
     }
   }
   
   # check package versions
-  pkg.ver <-parallel::clusterCall(cl, packageVersion, pkg = "pvclust")
+  pkg.ver <-parallel::clusterCall(cl, packageVersion, pkg = "fastpvclust")
   r.ver   <- parallel::clusterCall(cl, getRversion)
   if(length(unique(pkg.ver)) > 1 || length(unique(r.ver)) > 1) {
     
@@ -81,14 +81,14 @@ pvclust.parallel <- function(cl, data, method.hclust, method.dist, use.cor,
       node=seq_len(length(node.name)),
       name=unlist(node.name),
       R=unlist(lapply(r.ver, as.character)),
-      pvclust=unlist(lapply(pkg.ver, as.character)))
+      fastpvclust=unlist(lapply(pkg.ver, as.character)))
     
     if(nrow(version.table) > 10)
       table.out <- c(capture.output(print(head(version.table, n=10), row.names=FALSE)), "    ...")
     else
       table.out <- capture.output(print(version.table, row.names=FALSE))
     
-    warning("R/pvclust versions are not unique:\n",
+    warning("R/fastpvclust versions are not unique:\n",
       paste(table.out, collapse="\n"))
   }
   
@@ -113,7 +113,7 @@ pvclust.parallel <- function(cl, data, method.hclust, method.dist, use.cor,
     parallel::clusterSetRNGStream(cl = cl, iseed = iseed)
   
   # set setting parameters
-  pars <- pvclust.common.settings(data=data, method.dist=method.dist, use.cor=use.cor, method.hclust=method.hclust, r=r)
+  pars <- fastpvclust.common.settings(data=data, method.dist=method.dist, use.cor=use.cor, method.hclust=method.hclust, r=r)
   
   ncl <- length(cl)
   nbl <- as.list(rep(nboot %/% ncl, times=ncl))
@@ -124,7 +124,7 @@ pvclust.parallel <- function(cl, data, method.hclust, method.dist, use.cor,
   if(!quiet)
     cat("Multiscale bootstrap... ")
   
-  mlist <- parallel::parLapply(cl, nbl, pvclust.node,
+  mlist <- parallel::parLapply(cl, nbl, fastpvclust.node,
                                r=pars$r, data=data, object.hclust=pars$data.hclust, method.dist=method.dist,
                                use.cor=use.cor, method.hclust=pars$method.hclust,
                                store=store, weight=weight, quiet=quiet)
@@ -141,7 +141,7 @@ pvclust.parallel <- function(cl, data, method.hclust, method.dist, use.cor,
     }
   }
   
-  result <- pvclust.merge(data=data, object.hclust=pars$data.hclust, mboot=mboot)
+  result <- fastpvclust.merge(data=data, object.hclust=pars$data.hclust, mboot=mboot)
   
   return(result)
 }
@@ -213,9 +213,9 @@ hc2split <- function(x)
   return(split)
 }
 
-pvclust.node <- function(x, r, ...)
+fastpvclust.node <- function(x, r, ...)
 {
-  #    require(pvclust)
+  #    require(fastpvclust)
   mboot.node <- lapply(r, boot.hclust, nboot=x, ...)
   return(mboot.node)
 }
@@ -243,13 +243,13 @@ boot.hclust <- function(r, data, object.hclust, method.dist, use.cor,
   for(i in 1:nboot){
     if(weight && r>10) {  ## <- this part should be improved
       w1 <- as.vector(rmultinom(1,size,w0)) # resampled weight
-      suppressWarnings(distance <- distw.pvclust(data,w1,method=method.dist,use.cor=use.cor))
+      suppressWarnings(distance <- distw.fastpvclust(data,w1,method=method.dist,use.cor=use.cor))
     } else {
       smpl <- sample(1:n, size, replace=TRUE)
       if(is.function(method.dist)) {
         suppressWarnings(distance  <- method.dist(data[smpl,]))
       } else {
-        suppressWarnings(distance  <- dist.pvclust(data[smpl,],method=method.dist,use.cor=use.cor))
+        suppressWarnings(distance  <- dist.fastpvclust(data[smpl,],method=method.dist,use.cor=use.cor))
       }
     }
     if(all(is.finite(distance))) { # check if distance is valid
@@ -278,7 +278,7 @@ boot.hclust <- function(r, data, object.hclust, method.dist, use.cor,
   return(boot)
 }
 
-pvclust.merge <- function(data, object.hclust, mboot){
+fastpvclust.merge <- function(data, object.hclust, mboot){
   
   pattern <- hc2split(object.hclust)$pattern
   
@@ -323,15 +323,15 @@ pvclust.merge <- function(data, object.hclust, mboot){
   
   row.names(edges.pv) <- row.names(edges.cnt) <- 1:ne
   
-  version <- packageVersion("pvclust")
+  version <- packageVersion("fastpvclust")
   
   result <- list(hclust=object.hclust, edges=edges.pv, count=edges.cnt,
                  msfit=ms.fitted, nboot=nboot, r=r, store=store, version=version)
-  class(result) <- "pvclust"
+  class(result) <- "fastpvclust"
   return(result)
 }
 
-dist.pvclust <- function(x, method="euclidean", use.cor="pairwise.complete.obs")
+dist.fastpvclust <- function(x, method="euclidean", use.cor="pairwise.complete.obs")
 {
   if(!is.na(pmatch(method,"correlation"))){
     res <- as.dist(1 - cor(x, method="pearson", use=use.cor))
@@ -411,7 +411,7 @@ corw <- function(x,w,
 }
 
 ### calculate distance by weight
-distw.pvclust <- function(x,w,method="correlation", use.cor="pairwise.complete.obs")
+distw.fastpvclust <- function(x,w,method="correlation", use.cor="pairwise.complete.obs")
 {
   if(!is.na(pmatch(method,"correlation"))){
     res <- as.dist(1 - corw(x,w, use=use.cor))

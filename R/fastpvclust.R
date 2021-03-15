@@ -1,4 +1,4 @@
-pvclust <- function(data, method.hclust="average", method.dist="correlation",
+fastpvclust <- function(data, method.hclust="average", method.dist="correlation",
                     use.cor="pairwise.complete.obs", nboot=1000, parallel=FALSE,
                     r=seq(.5,1.4,by=.1), store=FALSE, weight=FALSE, iseed=NULL, quiet=FALSE)
 {
@@ -50,35 +50,35 @@ pvclust <- function(data, method.hclust="average", method.dist="correlation",
       
     }
     
-    pvclust.parallel(cl=cl, data=data, method.hclust=method.hclust,
+    fastpvclust.parallel(cl=cl, data=data, method.hclust=method.hclust,
                      method.dist=method.dist, use.cor=use.cor,
                      nboot=nboot, r=r, store=store, weight=weight,
                      iseed=iseed, quiet=quiet, parallel.check=TRUE)
     
   } else {
-    pvclust.nonparallel(data=data, method.hclust=method.hclust,
+    fastpvclust.nonparallel(data=data, method.hclust=method.hclust,
                         method.dist=method.dist, use.cor=use.cor,
                         nboot=nboot, r=r, store=store, weight=weight, iseed=iseed, quiet=quiet)
   }
 }
 
-parPvclust <- function(cl=NULL, data, method.hclust="average",
+parfastpvclust <- function(cl=NULL, data, method.hclust="average",
                        method.dist="correlation", use.cor="pairwise.complete.obs",
                        nboot=1000, r=seq(.5,1.4,by=.1), store=FALSE,
                        weight=FALSE, init.rand=NULL, iseed=NULL, quiet=FALSE) {
-  warning("\"parPvclust\" has been integrated into pvclust (with \"parallel\" option).\nIt is available for back compatibility but will be unavailable in the future.")
+  warning("\"parfastpvclust\" has been integrated into fastpvclust (with \"parallel\" option).\nIt is available for back compatibility but will be unavailable in the future.")
   
   if(!requireNamespace("parallel", quietly=TRUE))
-    stop("Package parallel is required for parPvclust.")
+    stop("Package parallel is required for parfastpvclust.")
   
-  pvclust.parallel(cl=cl, data=data, method.hclust=method.hclust,
+  fastpvclust.parallel(cl=cl, data=data, method.hclust=method.hclust,
                    method.dist=method.dist, use.cor=use.cor,
                    nboot=nboot, r=r, store=store, weight=weight,
                    init.rand=init.rand, iseed=iseed, quiet=quiet,
                    parallel.check=TRUE)
 }
 
-plot.pvclust <- function(x, print.pv=TRUE, print.num=TRUE, float=0.01,
+plot.fastpvclust <- function(x, print.pv=TRUE, print.num=TRUE, float=0.01,
                          col.pv=c(si=4, au=2, bp=3, edge=8), cex.pv=0.8, font.pv=NULL,
                          col=NULL, cex=NULL, font=NULL, lty=NULL, lwd=NULL,
                          main=NULL, sub=NULL, xlab=NULL, ...)
@@ -98,7 +98,7 @@ plot.pvclust <- function(x, print.pv=TRUE, print.num=TRUE, float=0.01,
   
   if(!isFALSE(print.pv)) {
     
-    # back-compatibility for pvclust <= 2.0-0
+    # back-compatibility for fastpvclust <= 2.0-0
     if(isTRUE(print.pv) && length(col) == 3 && is.null(names(col))) {
       names(col) <- c("au", "bp", "edge")
     }
@@ -117,9 +117,9 @@ plot.pvclust <- function(x, print.pv=TRUE, print.num=TRUE, float=0.01,
   }
 }
 
-text.pvclust <- function(x, col=c(au=2, bp=3, edge=8), print.num=TRUE, float=0.01, cex=NULL, font=NULL, ...)
+text.fastpvclust <- function(x, col=c(au=2, bp=3, edge=8), print.num=TRUE, float=0.01, cex=NULL, font=NULL, ...)
 {
-  # back-compatibility for pvclust <= 2.0-0
+  # back-compatibility for fastpvclust <= 2.0-0
   if(length(col) == 3 && is.null(names(col)))
     names(col) <- c("au", "bp", "edge")
   
@@ -169,7 +169,7 @@ text.pvclust <- function(x, col=c(au=2, bp=3, edge=8), print.num=TRUE, float=0.0
   
 }
 
-print.pvclust <- function(x, which=NULL, digits=3, ...)
+print.fastpvclust <- function(x, which=NULL, digits=3, ...)
 {
   if(is.null(which)) which <- 1:nrow(x$edges)
   cat("\n")
@@ -180,7 +180,7 @@ print.pvclust <- function(x, which=NULL, digits=3, ...)
   cat("\n")
 }
 
-summary.pvclust <- function(object, ...){
+summary.fastpvclust <- function(object, ...){
   class(object) <- "list"
   summary(object, ...)
 }
@@ -260,7 +260,7 @@ msplot <- function(x, edges=NULL, ...)
   }
 }
 
-lines.pvclust <- function(x, alpha=0.95, pv="au", type="geq", col=2, lwd=2, ...)
+lines.fastpvclust <- function(x, alpha=0.95, pv="au", type="geq", col=2, lwd=2, ...)
 {
   len <- nrow(x$edges)
   member <- hc2split(x$hclust)$member
@@ -274,7 +274,7 @@ lines.pvclust <- function(x, alpha=0.95, pv="au", type="geq", col=2, lwd=2, ...)
   j <- 1
   
   if(is.na(pm <- pmatch(type, c("geq", "leq", "gt", "lt"))))
-    stop("Invalid type argument: see help(lines.pvclust)")
+    stop("Invalid type argument: see help(lines.fastpvclust)")
   
   for(i in (len - 1):1)
   {
