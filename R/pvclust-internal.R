@@ -12,7 +12,7 @@ pvclust.common.settings <- function(data, method.dist, use.cor, method.hclust, r
     distance <- dist.pvclust(data, method=method.dist, use.cor=use.cor)
   }
   
-  data.hclust <- hclust(distance, method=method.hclust)
+  data.hclust <- fastcluster::hclust(distance, method=method.hclust)
   
   # ward -> ward.D
   # only if R >= 3.1.0
@@ -253,7 +253,7 @@ boot.hclust <- function(r, data, object.hclust, method.dist, use.cor,
       }
     }
     if(all(is.finite(distance))) { # check if distance is valid
-      x.hclust  <- hclust(distance,method=method.hclust)
+      x.hclust  <- fastcluster::hclust(distance,method=method.hclust)
       pattern.i <- hc2split(x.hclust)$pattern # split
       edges.cnt <- edges.cnt + table(factor(pattern.i,  levels=pattern))
     } else {
